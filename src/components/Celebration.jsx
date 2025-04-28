@@ -1,21 +1,21 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase/firebase";
+import Confetti from "react-confetti";
 
 export default function Celebration() {
   const [messages, setMessages] = useState([]);
+  const [showConfetti, setShowConfetti] = useState(true);
 
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
         const querySnapshot = await getDocs(q);
-
         const messagesData = querySnapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
         }));
-
         setMessages(messagesData);
       } catch (error) {
         console.error("Erro ao buscar mensagens:", error);
@@ -23,10 +23,25 @@ export default function Celebration() {
     };
 
     fetchMessages();
+
+    // para o confetti após 5 segundos
+    setTimeout(() => {
+      setShowConfetti(false);
+    }, 15000);
   }, []);
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center text-center overflow-y-auto">
+      {showConfetti && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle={true}
+          numberOfPieces={400}
+          gravity={0.3}
+        />
+      )}
+
       <h1 className="text-white text-6xl font-bold mt-10 z-10">
         🎉 Parabéns Marcos Mendes 🎉
       </h1>

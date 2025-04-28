@@ -1,28 +1,47 @@
 import { useEffect, useState, useRef } from "react";
-import Confetti from "react-canvas-confetti";
-import { FaPlayCircle } from "react-icons/fa"; // Ícone bonito de Play
-
-const targetDate = new Date('2025-04-29T00:00:00').getTime();
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/firebase";
+import Confetti from "react-confetti";
+import { FaPlayCircle } from "react-icons/fa";
 
 export default function Countdown({ onFinish }) {
-  const [timeLeft, setTimeLeft] = useState(targetDate - Date.now());
+  const [targetDate, setTargetDate] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const playerRef = useRef(null);
 
+  // Busca a data segura do Firestore ao iniciar o componente
   useEffect(() => {
+    const fetchTargetDate = async () => {
+      const docSnap = await getDoc(doc(db, "settings", "countdown"));
+      if (docSnap.exists()) {
+        const dateFromFirestore = docSnap.data().targetDate.toDate().getTime();
+        setTargetDate(dateFromFirestore);
+        setTimeLeft(dateFromFirestore - Date.now());
+      }
+    };
+
+    fetchTargetDate();
+  }, []);
+
+  // Controla o countdown
+  useEffect(() => {
+    if (!targetDate) return;
+
     const interval = setInterval(() => {
       const diff = targetDate - Date.now();
       if (diff <= 0) {
         clearInterval(interval);
-        onFinish();
         setShowConfetti(true);
+        onFinish && onFinish();
+        setTimeout(() => setShowConfetti(false), 5000);
       } else {
         setTimeLeft(diff);
       }
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [onFinish]);
+  }, [targetDate, onFinish]);
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
@@ -35,19 +54,18 @@ export default function Countdown({ onFinish }) {
 
   const handlePlayMusic = () => {
     const iframe = playerRef.current;
-    if (iframe) {
-      iframe.contentWindow.postMessage(
-        '{"event":"command","func":"unMute","args":""}',
-        "*"
-      );
-    }
+    iframe && iframe.contentWindow.postMessage(
+      '{"event":"command","func":"unMute","args":""}', "*"
+    );
   };
+
+  if (!timeLeft) {
+    return <div className="text-white">Carregando...</div>;
+  }
 
   return (
     <div className="relative w-full h-screen flex flex-col items-center justify-center text-center overflow-hidden">
-
-      {/* YouTube Video 🎵 */}
-      <div className="absolute top-0 left-0 w-full h-full z-0 overflow-hidden">
+      <div className="absolute inset-0 z-0 overflow-hidden">
         <iframe
           ref={playerRef}
           width="100%"
@@ -61,21 +79,23 @@ export default function Countdown({ onFinish }) {
         ></iframe>
       </div>
 
-      {/* Countdown */}
       <h1 className="text-white text-7xl font-bold animate-pulse z-10">
         {formatTime(timeLeft)}
       </h1>
 
-      {/* Botão Play Música */}
-      <button
-        onClick={handlePlayMusic}
-        className="z-10 mt-8"
-      >
+      <button onClick={handlePlayMusic} className="z-10 mt-8">
         <FaPlayCircle size={60} color="white" className="hover:scale-110 transition-transform duration-300" />
       </button>
 
-      {/* Confetti quando terminar */}
-      {showConfetti && <Confetti />}
+      {showConfetti && (
+        <Confetti
+          width={window.innerWidth}
+          height={window.innerHeight}
+          recycle
+          numberOfPieces={400}
+          gravity={0.3}
+        />
+      )}
     </div>
   );
 }
