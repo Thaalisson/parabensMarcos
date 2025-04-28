@@ -4,7 +4,7 @@ exports.handler = async (event, context) => {
   try {
     const { timestamp } = JSON.parse(event.body);
 
-    const cloudinaryApiSecret = process.env.CLOUDINARY_API_SECRET; // ⚡ coloque aqui seu API Secret da Cloudinary
+    const cloudinaryApiSecret = process.env.CLOUDINARY_API_SECRET;
 
     if (!timestamp) {
       return {

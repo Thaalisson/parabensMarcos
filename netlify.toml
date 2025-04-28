@@ -1,12 +1,14 @@
 [build]
-  publish = "build"
   command = "npm run build"
+  publish = "build"
   functions = "netlify/functions"
 
 [dev]
-  functions = "netlify/functions"
+  command = "npm run dev"
+  targetPort = 3000
+  port = 8888
   publish = "build"
-  framework = "#custom"
+  functionsPort = 9999
 
 [[redirects]]
   from = "/*"
