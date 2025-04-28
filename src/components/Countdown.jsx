@@ -7,29 +7,42 @@ import { FaPlayCircle } from "react-icons/fa";
 export default function Countdown({ onFinish }) {
   const [targetDate, setTargetDate] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [currentTime, setCurrentTime] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const playerRef = useRef(null);
 
-  // Busca a data segura do Firestore ao iniciar o componente
   useEffect(() => {
-    const fetchTargetDate = async () => {
-      const docSnap = await getDoc(doc(db, "settings", "countdown"));
-      if (docSnap.exists()) {
-        const dateFromFirestore = docSnap.data().targetDate.toDate().getTime();
-        setTargetDate(dateFromFirestore);
-        setTimeLeft(dateFromFirestore - Date.now());
+    const fetchTimeAndTarget = async () => {
+      try {
+        // Pega a data do Firestore
+        const docSnap = await getDoc(doc(db, "settings", "countdown"));
+        if (!docSnap.exists()) return;
+
+        const fetchedTargetDate = docSnap.data().targetDate.toDate().getTime();
+        setTargetDate(fetchedTargetDate);
+
+        // Agora busca a hora real de Brasília
+        const res = await fetch("http://worldtimeapi.org/api/timezone/America/Sao_Paulo");
+        const data = await res.json();
+        const now = new Date(data.datetime).getTime();
+
+        setCurrentTime(now);
+        setTimeLeft(fetchedTargetDate - now);
+      } catch (error) {
+        console.error("Erro ao buscar hora de Brasília:", error);
       }
     };
 
-    fetchTargetDate();
+    fetchTimeAndTarget();
   }, []);
 
-  // Controla o countdown
   useEffect(() => {
-    if (!targetDate) return;
+    if (!currentTime || !targetDate) return;
 
     const interval = setInterval(() => {
-      const diff = targetDate - Date.now();
+      const newNow = currentTime + (Date.now() - currentTime); 
+      const diff = targetDate - newNow;
+
       if (diff <= 0) {
         clearInterval(interval);
         setShowConfetti(true);
@@ -41,7 +54,7 @@ export default function Countdown({ onFinish }) {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [targetDate, onFinish]);
+  }, [currentTime, targetDate, onFinish]);
 
   const formatTime = (ms) => {
     const totalSeconds = Math.floor(ms / 1000);
