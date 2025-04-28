@@ -1,6 +1,12 @@
 [build]
   publish = "build"
   command = "npm run build"
+  functions = "netlify/functions"
+
+[dev]
+  functions = "netlify/functions"
+  publish = "build"
+  framework = "#custom"
 
 [[redirects]]
   from = "/*"
