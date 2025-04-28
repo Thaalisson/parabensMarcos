@@ -60,7 +60,7 @@ export default function MessageForm() {
           </button>
         </form> 
       ) : (
-        <h1 className="text-2xl font-bold text-center">Obrigado apela sua mensagem! 🎉</h1>
+        <h1 className="text-2xl font-bold text-center">Obrigado pela sua mensagem! 🎉</h1>
       )}
     </div>
   );
