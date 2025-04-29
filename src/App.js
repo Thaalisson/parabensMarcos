@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
 import LeaveMessagePage from "./pages/LeaveMessagePage";
 import Celebration from "./components/Celebration";
 
